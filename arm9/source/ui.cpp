@@ -22,8 +22,8 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
-#include <sys/dir.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "ui.h"
 #include "bios_decompress_callback.h"
 
@@ -95,6 +95,9 @@
 #define MENU_PAGE_SCROLL 6
 
 #define CHEAT_MENU_FOLDER_UP -1
+
+using namespace std;
+
 const char CHEAT_MENU_FOLDER_UP_NAME[] = " [..]";
 
 
@@ -723,10 +726,10 @@ bool UserInterface::fileInfoPredicate (const FileInfo& lhs, const FileInfo& rhs)
 std::vector<UserInterface::FileInfo> UserInterface::getDirContents (const char* extension) 
 {
 	std::vector<FileInfo> files;
-	DIR_ITER* dir;
+	DIR* dir;
 	struct stat st;
 	bool isDirectory;
-	char filename[MAXPATHLEN];
+	string  filename;
 	int len;
 	int extLen = 0;
 	UserInterface::FileInfo fileInfo;
@@ -735,19 +738,25 @@ std::vector<UserInterface::FileInfo> UserInterface::getDirContents (const char* 
 		extLen = strlen (extension);
 	}
 	
-	dir = diropen (".");
+	dir = opendir  (".");
 	
-	while ( dirnext(dir, filename, &st) == 0 ) {
+	while(true) {
+		
+		struct dirent* pent = readdir(dir);
+		if(pent == NULL) break;
+		
+		filename = pent->d_name;
 		isDirectory = (st.st_mode & S_IFDIR) ? true : false;
-		len = strlen(filename);
-		if ( (isDirectory && strcmp(filename, ".") != 0) || extension == NULL || !strcasecmp(extension, &filename[len-extLen])) {
+		len = filename.length();
+		
+		if ( (isDirectory && strcmp(filename.c_str(), ".") != 0) || extension == NULL || !strcasecmp(extension, &filename.c_str()[len-extLen])) {
 			fileInfo.filename = filename;
 			fileInfo.isDirectory = isDirectory;
 			files.push_back (fileInfo);
 		}
 	}
 
-	dirclose (dir);
+	closedir (dir);
 	
 	std::sort(files.begin(), files.end(), UserInterface::fileInfoPredicate);
 	
@@ -792,7 +801,7 @@ std::string UserInterface::fileBrowser (const char* extension)
 	int pressed;
 	std::vector<UserInterface::FileInfo> contents;
 	std::string filename;
-	char* cwd = new char[MAXPATHLEN];
+	char* cwd = new char[PATH_MAX];
 	std::stack<UserInterface::MENU_LEVEL> menuLevelStack;
 
 	contents = getDirContents (extension);
@@ -916,7 +925,7 @@ std::string UserInterface::fileBrowser (const char* extension)
 		} 
 		setCursorPosition ((MENU_FIRST_ROW + menuLevel.selected - menuLevel.top) * TOUCH_GRID_SIZE);
 		setScrollbarPosition (menuLevel.selected, (int)contents.size()-1);
-		getcwd (cwd, MAXPATHLEN);
+		getcwd (cwd, PATH_MAX);
 		showMessage (TEXT_INFO, "%s\n%s", cwd, contents[menuLevel.selected].filename.c_str());
 	} while (!(pressed == BUTTON_EXIT));
 

@@ -1,0 +1,1 @@
+cursor.o: cursor.s

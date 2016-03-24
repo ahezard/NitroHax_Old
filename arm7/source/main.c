@@ -18,7 +18,7 @@
 
 #include <nds.h>
 #include <nds/arm7/input.h>
-#include <nds/arm7/system.h>
+#include <nds/system.h>
 
 #include "cheat_engine_arm7.h"
 
