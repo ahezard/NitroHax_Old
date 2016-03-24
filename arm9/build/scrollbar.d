@@ -1,1 +1,0 @@
-scrollbar.o: scrollbar.s
