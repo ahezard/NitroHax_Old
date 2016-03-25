@@ -745,6 +745,7 @@ std::vector<UserInterface::FileInfo> UserInterface::getDirContents (const char* 
 		struct dirent* pent = readdir(dir);
 		if(pent == NULL) break;
 		
+		stat(pent->d_name, &st);		
 		filename = pent->d_name;
 		isDirectory = (st.st_mode & S_IFDIR) ? true : false;
 		len = filename.length();
