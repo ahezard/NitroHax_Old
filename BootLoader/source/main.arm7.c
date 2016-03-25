@@ -36,6 +36,10 @@
 #include <nds/dma.h>
 #include <nds/arm7/audio.h>
 #include <nds/ipc.h>
+#include <nds/registers_alt.h>
+#include <nds/memory.h>
+#include <nds/card.h>
+#include <stdio.h>
 
 #ifndef NULL
 #define NULL 0
@@ -175,6 +179,56 @@ void arm7_resetMemory (void) {
 	arm7_readFirmware((u32)0x000000, (u8*)0x027FF830, 0x20);
 }
 
+int cardInit (tNDSHeader* ndsHeader, u32* chipID) {
+
+	cardReset();
+
+	// Reading cart info...
+
+	static u8 header1[512];
+	static u8 header2[512];
+
+	// Read the header twice to verify.
+	// If the card is being encrypted, we will get random junk
+	cardReadHeader(header1);
+	cardReadHeader(header2);
+
+	// Make sure we got the same data twice
+	while(memcmp(header1, header2, 32) != 0) {
+		cardReadHeader(header1);
+		cardReadHeader(header2);
+	}
+
+	cardReadHeader(ndsHeader);
+	*chipID = cardReadID(0);
+	
+	return 0;
+}
+
+void cardRead (u32 src, u32* dest, size_t size) {
+	cardParamCommand(CARD_CMD_DATA_READ, src,
+		CARD_ACTIVATE|CARD_nRESET|CARD_BLK_SIZE(1),dest,size);
+}
+
+//void cardReset() {
+//	u8 cmdData[8]={0,0,0,0,0,0,0,CARD_CMD_DUMMY};
+//	cardWriteCommand(cmdData);
+//	CARD_CR2=CARD_ACTIVATE|CARD_nRESET|CARD_CLK_SLOW|CARD_BLK_SIZE(5)|CARD_DELAY2(0x18);
+//	u32 readed=0;
+//	do
+//	{
+//		if(CARD_CR2&CARD_DATA_READY)
+//    	{
+//			if(readed<0x2000)
+//			{
+//        		u32 data=CARD_DATA_RD;
+//        		(void)data;
+//        		readed+=4;
+//			}
+//		}
+//	} while(CARD_CR2&CARD_BUSY);
+//}
+
 
 int arm7_loadBinary (void) {
 	u32 chipID;
@@ -193,7 +247,7 @@ int arm7_loadBinary (void) {
 	*((u16*)0x027ff80a) = ndsHeader->secureCRC16;	// Secure Area Checksum, CRC-16 of [ [20h]..7FFFh]
 	*((u16*)0x027ffc40) = 0x1;						// Booted from card -- EXTREMELY IMPORTANT!!! Thanks to cReDiAr
 	
-	cardRead(ndsHeader->arm9romSource, (u32*)ndsHeader->arm9destination, ndsHeader->arm9binarySize);	cardRead(ndsHeader->arm7romSource, (u32*)ndsHeader->arm7destination, ndsHeader->arm7binarySize);
+	cardRead(ndsHeader->arm9romOffset, (u32*)ndsHeader->arm9destination, ndsHeader->arm9binarySize);	cardRead(ndsHeader->arm7romOffset, (u32*)ndsHeader->arm7destination, ndsHeader->arm7binarySize);
 	return ERR_NONE;
 }
 
