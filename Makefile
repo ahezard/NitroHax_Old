@@ -40,6 +40,8 @@ BootLoader/load.bin	:	BootLoader/source/*
 
 #---------------------------------------------------------------------------------
 arm9/data/load.bin	:	BootLoader/load.bin
+	rm -Rf arm9/data
+	mkdir arm9/data
 	cp $< $@
 
 #---------------------------------------------------------------------------------
