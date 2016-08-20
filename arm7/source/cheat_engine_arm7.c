@@ -35,13 +35,16 @@ void runCheatEngineCheck (void)
 		// the result to ARM7 side).
 		// if ([4004008h] AND 80000000h)=0 then skip_detection_and_assume_NDS_mode
 		// else if ([4004000h] AND 03h)=01h then DSi_mode else NDS_mode
+		
 		unsigned int * SCFG_ROM=	(unsigned int*)0x4004000;
 		unsigned int * SCFG_EXT=	(unsigned int*)0x4004008;
-		if(*SCFG_EXT & 0x80000000 != 0)  {
-			if (*SCFG_ROM & 0x03==0x01) {
-				*SCFG_ROM = 0;
-			}
-		}
+		// Disabled. No longer needed now that we got bit31 patched out. :D
+		
+		//if(*SCFG_EXT & 0x80000000 != 0)  {
+			//if (*SCFG_ROM & 0x03==0x01) {
+				//*SCFG_ROM = 0;
+			//}
+		//}
 			
 		swiSoftReset();
 	} 

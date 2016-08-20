@@ -44,6 +44,19 @@ static inline void ensure (bool condition, const char* errorMsg) {
 }	
 
 //---------------------------------------------------------------------------------
+void doPause() {
+//---------------------------------------------------------------------------------
+	ui.showMessage ("Please insert a game card, then press start");
+	while(1) {
+		scanKeys();
+		if(keysDown() & KEY_START)
+			break;
+		swiWaitForVBlank();
+	}
+	scanKeys();
+}
+
+//---------------------------------------------------------------------------------
 int main(int argc, const char* argv[])
 {
 	u32 ndsHeader[0x80];
@@ -57,13 +70,19 @@ int main(int argc, const char* argv[])
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
+	unsigned int * SCFG_EXT=	(unsigned int*)0x4004008;
+	
+
 #ifdef DEMO
 	ui.demo();
 	while(1);
 #endif
 
+	doPause();
+	*((vu32*)0x02111114) = (u32)0x1;
+	
 	ensure (fatInitDefault(), "FAT init failed");
-
+	
 	// Read cheat file
 	for (u32 i = 0; i < sizeof(defaultFiles)/sizeof(const char*); i++) {
 		cheatFile = fopen (defaultFiles[i], "rb");
@@ -92,11 +111,11 @@ int main(int argc, const char* argv[])
 	sysSetCardOwner (BUS_OWNER_ARM9);
 
 	ui.showMessage ("Loaded codes\nYou can remove your flash card\nRemove DS Card");
-	do {
+/* 	do {
 		swiWaitForVBlank();
 		getHeader (ndsHeader);
 	} while (ndsHeader[0] != 0xffffffff);
-
+ */
 	ui.showMessage ("Insert Game");
 	do {
 		swiWaitForVBlank();
@@ -143,3 +162,4 @@ int main(int argc, const char* argv[])
 
 	return 0;
 }
+
