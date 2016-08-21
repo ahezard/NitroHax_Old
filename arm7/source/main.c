@@ -19,6 +19,7 @@
 #include <nds.h>
 #include <nds/arm7/input.h>
 #include <nds/system.h>
+#include <nds/fifocommon.h>
 
 #include "cheat_engine_arm7.h"
 
@@ -38,7 +39,7 @@ unsigned int * SCFG_CLK=(unsigned int*)0x4004004;
 
 void PowerOffSlot()
 {
-	while(*SCFG_MC&0x0C ==  0x0C); 		// wait until state<>3
+	while(*SCFG_MC&0x0C !=  0x0C); 		// wait until state<>3
 	if(*SCFG_MC&0x0C != 0x08) return; 		// exit if state<>2      
 	
 	*SCFG_MC = 0x0C;          		// set state=3 
@@ -47,7 +48,7 @@ void PowerOffSlot()
 
 void PowerOnSlot()
 {
-	while(*SCFG_MC&0x0C ==  0x0C); // wait until state<>3
+	while(*SCFG_MC&0x0C !=  0x0C); // wait until state<>3
 	if(*SCFG_MC&0x0C != 0x00) return; //  exit if state<>0
 	
 	*SCFG_MC = 0x04;    // wait 1ms, then set state=1
@@ -65,34 +66,30 @@ void ResetSlot() {
 	int backup =*SCFG_EXT;
 	*SCFG_EXT=0xFFFFFFFF;	
 	PowerOffSlot();
+	fifoSendValue32(FIFO_USER_01, 1);
 	PowerOnSlot();
 	*SCFG_EXT=backup;
-}
-
-void runCardResetCheck(){
-	if(*((vu32*)0x02111114) == (u32)0x1){
-		// Card Reset Start here
-		ResetSlot();
-		
-		if(*SCFG_EXT == 0x92A00000) {
-		*SCFG_EXT |= 0x830F0100; // NAND ACCESS
-		// SCFG_CLK
-		// 0x0180 : NTR
-		// 0x0187 : TWL
-		// 
-		// *SCFG_CLK |= 1;
-	}
-	}
-	*((vu32*)0x02111114) = (u32)0x0;
 }
 
 //---------------------------------------------------------------------------------
 int main(void) {
 //---------------------------------------------------------------------------------
 
+	if(*SCFG_EXT == 0x92A00000) {
+		*SCFG_EXT |= 0x830F0100; // NAND ACCESS
+		// SCFG_CLK
+		// 0x0180 : NTR
+		// 0x0187 : TWL
+		// 
+		*SCFG_CLK |= 1;
+	}
+
 	irqInit();
 	fifoInit();
 
+	// Card Reset Start here
+	ResetSlot();
+	
 	// read User Settings from firmware
 	readUserSettings();
 
@@ -110,7 +107,6 @@ int main(void) {
 
 	// Keep the ARM7 mostly idle
 	while (1) {
-		runCardResetCheck();
 		runCheatEngineCheck();
 		swiWaitForVBlank();
 	}
