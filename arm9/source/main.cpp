@@ -22,6 +22,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <list>
+#include <nds/fifocommon.h>
 
 #include "cheat.h"
 #include "ui.h"
@@ -43,17 +44,17 @@ static inline void ensure (bool condition, const char* errorMsg) {
 	return;
 }	
 
+// Tells Arm7 to proceed with card reset function. Slot should be powered off when this code runs.
+// Effectively delays the process long enough for card init to work even if card is inserted at boot.
+// At some point we'll also add additional code to check cartridge inserted status bit so program wont
+// continue until a card is inserted.
+void CheckSlot() {
 //---------------------------------------------------------------------------------
-void doPause() {
-//---------------------------------------------------------------------------------
-	ui.showMessage ("Please insert a game card, then press start");
-	while(1) {
-		scanKeys();
-		if(keysDown() & KEY_START)
-			break;
-		swiWaitForVBlank();
-	}
-	scanKeys();
+	ui.showMessage ("Checking Status of Slot-1...");
+		for (int i = 0; i < 30; i++) {
+			swiWaitForVBlank();
+			fifoWaitValue32(FIFO_USER_01);
+		}
 }
 
 //---------------------------------------------------------------------------------
@@ -78,11 +79,12 @@ int main(int argc, const char* argv[])
 	while(1);
 #endif
 
-	doPause();
-	*((vu32*)0x02111114) = (u32)0x1;
 	
 	ensure (fatInitDefault(), "FAT init failed");
 	
+	// We'll complete slot reset before codes get loaded.
+	CheckSlot();
+
 	// Read cheat file
 	for (u32 i = 0; i < sizeof(defaultFiles)/sizeof(const char*); i++) {
 		cheatFile = fopen (defaultFiles[i], "rb");
@@ -110,13 +112,14 @@ int main(int argc, const char* argv[])
 	
 	sysSetCardOwner (BUS_OWNER_ARM9);
 
+	/*
 	ui.showMessage ("Loaded codes\nYou can remove your flash card\nRemove DS Card");
-/* 	do {
+	do {
 		swiWaitForVBlank();
 		getHeader (ndsHeader);
 	} while (ndsHeader[0] != 0xffffffff);
- */
-	ui.showMessage ("Insert Game");
+	*/
+	ui.showMessage ("Codes loaded...");
 	do {
 		swiWaitForVBlank();
 		getHeader (ndsHeader);
@@ -125,7 +128,7 @@ int main(int argc, const char* argv[])
 	// Delay half a second for the DS card to stabilise
 	for (int i = 0; i < 30; i++) {
 		swiWaitForVBlank();
-	}	
+	}
 	
 	getHeader (ndsHeader);
 
