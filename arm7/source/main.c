@@ -65,7 +65,10 @@ void PowerOnSlot()
 void ResetSlot() {
 	int backup =*SCFG_EXT;
 	*SCFG_EXT=0xFFFFFFFF;	
+	fifoWaitValue32(FIFO_USER_02);
+	// Wait for arm9 to verify if cartridge inserted.
 	PowerOffSlot();
+	// Tells arm9 to continue after powering off slot. (so that card init does not occur too soon)
 	fifoSendValue32(FIFO_USER_01, 1);
 	PowerOnSlot();
 	*SCFG_EXT=backup;
@@ -86,9 +89,6 @@ int main(void) {
 
 	irqInit();
 	fifoInit();
-
-	// Card Reset Start here
-	ResetSlot();
 	
 	// read User Settings from firmware
 	readUserSettings();
@@ -104,6 +104,12 @@ int main(void) {
 	irqSet(IRQ_VBLANK, VblankHandler);
 
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT);   
+
+	// Card Reset Start here
+	// Do this last before the final idle loop. Arm7 needs to do important stuff before it waits for this
+	// since this function has a fifo wait command waiting for arm9 to tell it to continue after verify
+	// a cartridge is inserted.
+	ResetSlot();
 
 	// Keep the ARM7 mostly idle
 	while (1) {

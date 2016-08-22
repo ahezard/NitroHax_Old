@@ -44,17 +44,18 @@ static inline void ensure (bool condition, const char* errorMsg) {
 	return;
 }	
 
-// Tells Arm7 to proceed with card reset function. Slot should be powered off when this code runs.
-// Effectively delays the process long enough for card init to work even if card is inserted at boot.
-// At some point we'll also add additional code to check cartridge inserted status bit so program wont
-// continue until a card is inserted.
+
+// Waits for a preset amount of time then waits for arm7 to send fifo for FIFO_USER_01
+// This means it has powered off slot and has continued the card reset.
+// This ensures arm9 doesn't attempt to init card too soon when it's not ready.
 void CheckSlot() {
 //---------------------------------------------------------------------------------
 	ui.showMessage ("Checking Status of Slot-1...");
 		for (int i = 0; i < 30; i++) {
 			swiWaitForVBlank();
-			fifoWaitValue32(FIFO_USER_01);
 		}
+		// Waits for arm7 to power off slot before continuing
+		fifoWaitValue32(FIFO_USER_01);		
 }
 
 //---------------------------------------------------------------------------------
@@ -71,8 +72,8 @@ int main(int argc, const char* argv[])
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
-	unsigned int * SCFG_EXT=	(unsigned int*)0x4004008;
-	
+	// unsigned int * SCFG_EXT=	(unsigned int*)0x4004008;
+	unsigned int * SCFG_MC=		(unsigned int*)0x4004010;
 
 #ifdef DEMO
 	ui.demo();
@@ -80,7 +81,16 @@ int main(int argc, const char* argv[])
 #endif
 
 	
-	ensure (fatInitDefault(), "FAT init failed");
+	ensure (fatInitDefault(), "FAT init failed\nCheck that SD access was enabled!");
+	
+	// Hold in loop until cartridge detected. (this is skipped if there's one already inserted at boot)
+	do {
+		ui.showMessage ("No cartridge detected.\nPlease insert a cartridge to continue.");
+		swiWaitForVBlank();
+	} while (*SCFG_MC == 0x11);
+
+	// Tell Arm7 it's ready to start card reset.
+	fifoSendValue32(FIFO_USER_02, 1);
 	
 	// We'll complete slot reset before codes get loaded.
 	CheckSlot();
@@ -112,18 +122,7 @@ int main(int argc, const char* argv[])
 	
 	sysSetCardOwner (BUS_OWNER_ARM9);
 
-	/*
-	ui.showMessage ("Loaded codes\nYou can remove your flash card\nRemove DS Card");
-	do {
-		swiWaitForVBlank();
-		getHeader (ndsHeader);
-	} while (ndsHeader[0] != 0xffffffff);
-	*/
 	ui.showMessage ("Codes loaded...");
-	do {
-		swiWaitForVBlank();
-		getHeader (ndsHeader);
-	} while (ndsHeader[0] == 0xffffffff);
 
 	// Delay half a second for the DS card to stabilise
 	for (int i = 0; i < 30; i++) {
