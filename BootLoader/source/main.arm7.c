@@ -230,6 +230,9 @@ void arm7_startBinary (void)
 void arm7_main (void) {
 	int errorCode;
 	
+	unsigned int * SCFG_CLK=(unsigned int*)0x4004004;
+	unsigned int * SCFG_EXT=(unsigned int*)0x4004008;
+	
 	// Wait for ARM9 to at least start
 	while (arm9_stateFlag < ARM9_START);
 
@@ -256,6 +259,10 @@ void arm7_main (void) {
 	
 	debugOutput (ERR_STS_START);
 
+	// Set CLK back to normal
+	*SCFG_CLK=0x00000080;
+	// Locks bit31 again. SCFG_EXT must be set to zero on arm9 for this to work.
+	*SCFG_EXT=0x80000000;
 	arm7_startBinary();
 	
 	return;

@@ -38,8 +38,10 @@ void vramcpy (void* dst, const void* src, int len)
 
 void runCheatEngine (void* cheats, int cheatLength)
 {
+
 	irqDisable(IRQ_ALL);
 
+	unsigned int * SCFG_EXT=(unsigned int*)0x4004008;
 
 	// Direct CPU access to VRAM bank C
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_LCD;
@@ -54,7 +56,14 @@ void runCheatEngine (void* cheats, int cheatLength)
 	CHEAT_DATA_LOCATION[cheatLength/sizeof(u32) + 1] = 0;	
 
 	// Give the VRAM to the ARM7
-	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
+	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;
+
+	// Sets SCFG_EXT to 0x02000000 (what it's normally set to in NTR mode. Note that arm9 does not touch bit31. Only arm7 can do that)
+	// Arm7 sets bit31 to 1. This results in SCFG getting locked out again.
+	// So this will help fix compatibility issues with games that have issue with the new patch.
+	// Have to do this here instead of in main.arm9.c as for some odd reason it hangs otherwise.
+	// NTR Launcher did not have this problem.
+	*SCFG_EXT=0x02000000;
 	
 	// Reset into a passme loop
 	REG_EXMEMCNT = 0xffff;

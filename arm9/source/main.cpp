@@ -44,18 +44,26 @@ static inline void ensure (bool condition, const char* errorMsg) {
 	return;
 }	
 
+void CheckSlot() {
+	unsigned int * SCFG_MC=(unsigned int*)0x4004010;
+	// Hold in loop until cartridge detected. (this is skipped if there's one already inserted at boot)
+	ui.showMessage ("No cartridge detected!\nPlease insert a cartridge to continue!");
+	do {
+		swiWaitForVBlank();
+	} while (*SCFG_MC == 0x11);
+}
 
 // Waits for a preset amount of time then waits for arm7 to send fifo for FIFO_USER_01
 // This means it has powered off slot and has continued the card reset.
 // This ensures arm9 doesn't attempt to init card too soon when it's not ready.
-void CheckSlot() {
+void WaitForSlot() {
 //---------------------------------------------------------------------------------
 	ui.showMessage ("Checking Status of Slot-1...");
-		for (int i = 0; i < 30; i++) {
-			swiWaitForVBlank();
-		}
-		// Waits for arm7 to power off slot before continuing
-		fifoWaitValue32(FIFO_USER_01);		
+	// Waits for arm7 to power off slot before continuing
+	fifoWaitValue32(FIFO_USER_01);		
+	for (int i = 0; i < 30; i++) {
+		swiWaitForVBlank();
+	}
 }
 
 //---------------------------------------------------------------------------------
@@ -72,8 +80,7 @@ int main(int argc, const char* argv[])
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
-	// unsigned int * SCFG_EXT=	(unsigned int*)0x4004008;
-	unsigned int * SCFG_MC=		(unsigned int*)0x4004010;
+	unsigned int * SCFG_MC=(unsigned int*)0x4004010;
 
 #ifdef DEMO
 	ui.demo();
@@ -81,19 +88,24 @@ int main(int argc, const char* argv[])
 #endif
 
 	
-	ensure (fatInitDefault(), "FAT init failed\nCheck that SD access was enabled!");
-	
-	// Hold in loop until cartridge detected. (this is skipped if there's one already inserted at boot)
-	do {
-		ui.showMessage ("No cartridge detected.\nPlease insert a cartridge to continue.");
-		swiWaitForVBlank();
-	} while (*SCFG_MC == 0x11);
-
-	// Tell Arm7 it's ready to start card reset.
-	fifoSendValue32(FIFO_USER_02, 1);
+	ensure (fatInitDefault(), "SD init failed\nLauncher not patched!");
 	
 	// We'll complete slot reset before codes get loaded.
-	CheckSlot();
+	if(*SCFG_MC == 0x11) {
+		CheckSlot();
+	}
+	
+	// Tell Arm7 it's ready to start card reset.
+	fifoSendValue32(FIFO_USER_02, 1);
+
+	WaitForSlot();
+	
+	// Tell Arm7 to finish up
+	fifoSendValue32(FIFO_USER_03, 1);
+
+	for (int i = 0; i < 20; i++) {
+		swiWaitForVBlank();
+	}
 
 	// Read cheat file
 	for (u32 i = 0; i < sizeof(defaultFiles)/sizeof(const char*); i++) {

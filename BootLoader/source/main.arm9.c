@@ -138,6 +138,7 @@ Jumps to the ARM9 NDS binary in sync with the display and ARM7
 Written by Darkain, modified by Chishm
 --------------------------------------------------------------------------*/
 void arm9_main (void) {
+
 	register int i;
 	
 	//set shared ram to ARM7
@@ -223,10 +224,11 @@ void arm9_main (void) {
 			}
 		}
 	}
-		
+
 	// wait for vblank then boot
 	while(REG_VCOUNT!=191);
 	while(REG_VCOUNT==191);
+
 	resetCpu();
 }
 

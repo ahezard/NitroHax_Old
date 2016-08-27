@@ -31,23 +31,35 @@ void VcountHandler() {
 void VblankHandler(void) {
 }
 
+
 unsigned int * ROMCTRL=(unsigned int*)0x40001A4; 
-unsigned int * SCFG_EXT=(unsigned int*)0x4004008; 
-unsigned int * SCFG_MC=(unsigned int*)0x4004010; 
 unsigned int * SCFG_ROM=(unsigned int*)0x4004000;
 unsigned int * SCFG_CLK=(unsigned int*)0x4004004; 
+unsigned int * SCFG_EXT=(unsigned int*)0x4004008; 
+unsigned int * SCFG_MC=(unsigned int*)0x4004010; 
 
-void PowerOffSlot()
-{
+void ResetSlot() {
+
+	int backup =*SCFG_EXT;
+	*SCFG_EXT=0xFFFFFFFF;	
+	
+	// Wait for arm9 to verify if cartridge inserted.
+	fifoWaitValue32(FIFO_USER_02);
+
+	// Power Off Slot
 	while(*SCFG_MC&0x0C !=  0x0C); 		// wait until state<>3
 	if(*SCFG_MC&0x0C != 0x08) return; 		// exit if state<>2      
 	
 	*SCFG_MC = 0x0C;          		// set state=3 
 	while(*SCFG_MC&0x0C !=  0x00);  // wait until state=0
-}
 
-void PowerOnSlot()
-{
+	// Tells arm9 to continue after powering off slot. (so that card init does not occur too soon)
+	fifoSendValue32(FIFO_USER_01, 1);
+
+	// Wait for arm9 one more time.
+	fifoWaitValue32(FIFO_USER_03);
+
+	// Power On Slot
 	while(*SCFG_MC&0x0C !=  0x0C); // wait until state<>3
 	if(*SCFG_MC&0x0C != 0x00) return; //  exit if state<>0
 	
@@ -60,17 +72,7 @@ void PowerOnSlot()
 	*ROMCTRL = 0x20000000; // wait 27ms, then set ROMCTRL=20000000h
 	
 	while(*ROMCTRL&0x8000000 != 0x8000000);
-}
 
-void ResetSlot() {
-	int backup =*SCFG_EXT;
-	*SCFG_EXT=0xFFFFFFFF;	
-	fifoWaitValue32(FIFO_USER_02);
-	// Wait for arm9 to verify if cartridge inserted.
-	PowerOffSlot();
-	// Tells arm9 to continue after powering off slot. (so that card init does not occur too soon)
-	fifoSendValue32(FIFO_USER_01, 1);
-	PowerOnSlot();
 	*SCFG_EXT=backup;
 }
 
