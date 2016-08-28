@@ -41,7 +41,7 @@ unsigned int * SCFG_MC=(unsigned int*)0x4004010;
 void ResetSlot() {
 
 	int backup =*SCFG_EXT;
-	*SCFG_EXT=0xFFFFFFFF;	
+	*SCFG_EXT=0x82050100;
 	
 	// Wait for arm9 to verify if cartridge inserted.
 	fifoWaitValue32(FIFO_USER_02);

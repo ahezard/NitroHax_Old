@@ -103,7 +103,7 @@ int main(int argc, const char* argv[])
 	// Tell Arm7 to finish up
 	fifoSendValue32(FIFO_USER_03, 1);
 
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 30; i++) {
 		swiWaitForVBlank();
 	}
 
