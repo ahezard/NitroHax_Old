@@ -32,17 +32,17 @@
 #include "suberror01.h"
 #include "suberror02.h"
 #include "suberror03.h"
-// #include "suberror04.h"
-// #include "suberror05.h"
-// #include "suberror06.h"
+#include "suberror04.h"
+#include "suberror05.h"
+#include "suberror06.h"
 
 #include "toperror2_00.h"
 #include "toperror2_01.h"
 #include "toperror2_02.h"
 #include "toperror2_03.h"
-// #include "toperror2_04.h"
-// #include "toperror2_05.h"
-// #include "toperror2_06.h"
+#include "toperror2_04.h"
+#include "toperror2_05.h"
+#include "toperror2_06.h"
 
 #define CONSOLE_SCREEN_WIDTH 32
 #define CONSOLE_SCREEN_HEIGHT 24
@@ -148,7 +148,6 @@ void ErrorNoCard() {
 	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
-	/* Program doesn't auto exit like NTR Launcher. Lets not use this for
 	// Wait for input, then fade out
 	do { swiWaitForVBlank(); scanKeys(); } while (!keysDown());
 
@@ -177,6 +176,6 @@ void ErrorNoCard() {
 	vramcpy3 (&BG_PALETTE_SUB[0], fade04Pal, fade04PalLen);
 	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
-	*/
+
 }
 

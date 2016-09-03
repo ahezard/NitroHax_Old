@@ -148,16 +148,16 @@ int main(int argc, const char* argv[])
 	// Boot Splash will always play.
 	BootSplashNormal();
 
+	while(1) {
+
 	if(REG_SCFG_MC == 0x11) { 
 		ErrorNoCard();
+		break;
 	} else {
 		runCheatEngine (cheatDest, curCheat * sizeof(u32));	
 		}
 
-	while(1) {
-
 	}
-
 	return 0;
 }
 
