@@ -21,6 +21,8 @@
 #include <nds/system.h>
 #include <nds/fifocommon.h>
 
+#include <maxmod7.h>
+
 #include "cheat_engine_arm7.h"
 
 
@@ -31,75 +33,52 @@ void VcountHandler() {
 void VblankHandler(void) {
 }
 
-
-unsigned int * ROMCTRL=(unsigned int*)0x40001A4; 
-unsigned int * SCFG_ROM=(unsigned int*)0x4004000;
-unsigned int * SCFG_CLK=(unsigned int*)0x4004004; 
-unsigned int * SCFG_EXT=(unsigned int*)0x4004008; 
-unsigned int * SCFG_MC=(unsigned int*)0x4004010; 
-
 void ResetSlot() {
-
-	int backup =*SCFG_EXT;
-	*SCFG_EXT=0x82050100;
+		
+	// Power off Slot
+	while(REG_SCFG_MC&0x0C !=  0x0C); 		// wait until state<>3
+	if(REG_SCFG_MC&0x0C != 0x08) return; 		// exit if state<>2      
 	
-	// Wait for arm9 to verify if cartridge inserted.
-	fifoWaitValue32(FIFO_USER_02);
+	REG_SCFG_MC = 0x0C;          		// set state=3 
+	while(REG_SCFG_MC&0x0C !=  0x00);  // wait until state=0
 
-	// Power Off Slot
-	while(*SCFG_MC&0x0C !=  0x0C); 		// wait until state<>3
-	if(*SCFG_MC&0x0C != 0x08) return; 		// exit if state<>2      
-	
-	*SCFG_MC = 0x0C;          		// set state=3 
-	while(*SCFG_MC&0x0C !=  0x00);  // wait until state=0
-
-	// Tells arm9 to continue after powering off slot. (so that card init does not occur too soon)
-	fifoSendValue32(FIFO_USER_01, 1);
-
-	// Wait for arm9 one more time.
-	fifoWaitValue32(FIFO_USER_03);
+	swiWaitForVBlank();
 
 	// Power On Slot
-	while(*SCFG_MC&0x0C !=  0x0C); // wait until state<>3
-	if(*SCFG_MC&0x0C != 0x00) return; //  exit if state<>0
+	while(REG_SCFG_MC&0x0C !=  0x0C); // wait until state<>3
+	if(REG_SCFG_MC&0x0C != 0x00) return; //  exit if state<>0
 	
-	*SCFG_MC = 0x04;    // wait 1ms, then set state=1
-	while(*SCFG_MC&0x0C != 0x04);
+	REG_SCFG_MC = 0x04;    // wait 1ms, then set state=1
+	while(REG_SCFG_MC&0x0C != 0x04);
 	
-	*SCFG_MC = 0x08;    // wait 10ms, then set state=2      
-	while(*SCFG_MC&0x0C != 0x08);
+	REG_SCFG_MC = 0x08;    // wait 10ms, then set state=2      
+	while(REG_SCFG_MC&0x0C != 0x08);
 	
-	*ROMCTRL = 0x20000000; // wait 27ms, then set ROMCTRL=20000000h
+	REG_ROMCTRL = 0x20000000; // wait 27ms, then set REG_ROMCTRL=20000000h
 	
-	while(*ROMCTRL&0x8000000 != 0x8000000);
-
-	*SCFG_EXT=backup;
+	while(REG_ROMCTRL&0x8000000 != 0x8000000);
 }
 
 //---------------------------------------------------------------------------------
 int main(void) {
 //---------------------------------------------------------------------------------
 
-	if(*SCFG_EXT == 0x92A00000) {
-		*SCFG_EXT |= 0x830F0100; // NAND ACCESS
-		// SCFG_CLK
-		// 0x0180 : NTR
-		// 0x0187 : TWL
-		// 
-		*SCFG_CLK |= 1;
-	}
+	REG_SCFG_CLK = 0x187;
 
 	irqInit();
 	fifoInit();
-	
+
 	// read User Settings from firmware
 	readUserSettings();
 
 	// Start the RTC tracking IRQ
 	initClockIRQ();
+	
+	mmInstall(FIFO_MAXMOD);
 
 	SetYtrigger(80);
 
+	installSoundFIFO();
 	installSystemFIFO();
 	
 	irqSet(IRQ_VCOUNT, VcountHandler);
@@ -107,11 +86,12 @@ int main(void) {
 
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT);   
 
-	// Card Reset Start here
-	// Do this last before the final idle loop. Arm7 needs to do important stuff before it waits for this
-	// since this function has a fifo wait command waiting for arm9 to tell it to continue after verify
-	// a cartridge is inserted.
+	REG_SCFG_EXT |= 0x830F0100; // NAND ACCESS
+	REG_SCFG_CLK |= 1;
+
+	fifoWaitValue32(FIFO_USER_01);
 	ResetSlot();
+	fifoSendValue32(FIFO_USER_02, 1);
 
 	// Keep the ARM7 mostly idle
 	while (1) {
@@ -119,4 +99,5 @@ int main(void) {
 		swiWaitForVBlank();
 	}
 }
+
 

@@ -17,15 +17,20 @@
 */
 
 #include <nds.h>
+#include <nds/fifocommon.h>
+
 #include <stdio.h>
 #include <fat.h>
 #include <string.h>
 #include <malloc.h>
 #include <list>
-#include <nds/fifocommon.h>
 
 #include "cheat.h"
 #include "ui.h"
+
+#include "bootsplash.h"
+#include "errorsplash.h"
+
 #include "nds_card.h"
 #include "cheat_engine.h"
 #include "crc.h"
@@ -44,31 +49,12 @@ static inline void ensure (bool condition, const char* errorMsg) {
 	return;
 }	
 
-void CheckSlot() {
-	unsigned int * SCFG_MC=(unsigned int*)0x4004010;
-	// Hold in loop until cartridge detected. (this is skipped if there's one already inserted at boot)
-	ui.showMessage ("No cartridge detected!\nPlease insert a cartridge to continue!");
-	do {
-		swiWaitForVBlank();
-	} while (*SCFG_MC == 0x11);
-}
-
-// Waits for a preset amount of time then waits for arm7 to send fifo for FIFO_USER_01
-// This means it has powered off slot and has continued the card reset.
-// This ensures arm9 doesn't attempt to init card too soon when it's not ready.
-void WaitForSlot() {
-//---------------------------------------------------------------------------------
-	ui.showMessage ("Checking Status of Slot-1...");
-	// Waits for arm7 to power off slot before continuing
-	fifoWaitValue32(FIFO_USER_01);		
-	for (int i = 0; i < 30; i++) {
-		swiWaitForVBlank();
-	}
-}
-
 //---------------------------------------------------------------------------------
 int main(int argc, const char* argv[])
 {
+
+	REG_SCFG_CLK = 0x85;
+
 	u32 ndsHeader[0x80];
 	u32* cheatDest;
 	int curCheat = 0;
@@ -80,32 +66,27 @@ int main(int argc, const char* argv[])
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
-	unsigned int * SCFG_MC=(unsigned int*)0x4004010;
-
 #ifdef DEMO
 	ui.demo();
 	while(1);
 #endif
 
-	
-	ensure (fatInitDefault(), "SD init failed\nLauncher not patched!");
-	
-	// We'll complete slot reset before codes get loaded.
-	if(*SCFG_MC == 0x11) {
-		CheckSlot();
+	if(REG_SCFG_MC == 0x11) {
+		ui.showMessage ("No cartridge detected!\nPlease insert a cartridge to continue!");
+		do { swiWaitForVBlank(); } while (REG_SCFG_MC == 0x11);
+		for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
 	}
 	
-	// Tell Arm7 it's ready to start card reset.
-	fifoSendValue32(FIFO_USER_02, 1);
-
-	WaitForSlot();
+	fifoSendValue32(FIFO_USER_01, 1);
 	
-	// Tell Arm7 to finish up
-	fifoSendValue32(FIFO_USER_03, 1);
+	for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
+	
+	fifoWaitValue32(FIFO_USER_02);	
 
-	for (int i = 0; i < 30; i++) {
-		swiWaitForVBlank();
-	}
+	for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
+
+	
+	ensure (fatInitDefault(), "SD init failed");
 
 	// Read cheat file
 	for (u32 i = 0; i < sizeof(defaultFiles)/sizeof(const char*); i++) {
@@ -134,12 +115,8 @@ int main(int argc, const char* argv[])
 	
 	sysSetCardOwner (BUS_OWNER_ARM9);
 
-	ui.showMessage ("Codes loaded...");
-
 	// Delay half a second for the DS card to stabilise
-	for (int i = 0; i < 30; i++) {
-		swiWaitForVBlank();
-	}
+	for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
 	
 	getHeader (ndsHeader);
 
@@ -168,7 +145,14 @@ int main(int argc, const char* argv[])
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 	ui.showMessage ("Running game");
 
-	runCheatEngine (cheatDest, curCheat * sizeof(u32));
+	// Boot Splash will always play.
+	BootSplashNormal();
+
+	if(REG_SCFG_MC == 0x11) { 
+		ErrorNoCard();
+	} else {
+		runCheatEngine (cheatDest, curCheat * sizeof(u32));	
+		}
 
 	while(1) {
 
