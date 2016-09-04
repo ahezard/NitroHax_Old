@@ -220,7 +220,7 @@ bool CheatCodelist::nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenTy
 	return true;
 }
 	
-bool CheatCodelist::load (FILE* fp)
+bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
 {
 	enum {state_normal, state_name, state_note, state_codes, state_gameid, state_allowedon} state = state_normal;
 	CheatBase* curItem = this;
@@ -275,8 +275,7 @@ bool CheatCodelist::load (FILE* fp)
 			case TOKEN_TAG_START:
 				depth++;
 				if (token == "game") {
-					cheatGame = new CheatGame (this);
-					this->addItem (cheatGame);
+					cheatGame = new CheatGame (this);					
 					curItem = cheatGame;
 				} else if (token == "folder") {
 					cheatFolder = dynamic_cast<CheatFolder*>(curItem);
@@ -313,6 +312,11 @@ bool CheatCodelist::load (FILE* fp)
 					 (token == "folder") ||
 					 (token == "cheat")
 				) {
+					if( token == "game" && ((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
+						this->addItem (curItem);
+					} else {
+						delete (curItem);
+					}
 					newItem = curItem->getParent();
 					if (newItem) {
 						curItem = newItem;

@@ -106,10 +106,6 @@ int main(int argc, const char* argv[])
 	c = fgetc(cheatFile);
 	ensure (c != 0xFF && c != 0xFE, "File is in an unsupported unicode encoding");
 	fseek (cheatFile, 0, SEEK_SET);
-	
-	CheatCodelist* codelist = new CheatCodelist();
-	ensure (codelist->load(cheatFile), "Can't read cheat list\n");
-	fclose (cheatFile);
 
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 	
@@ -124,6 +120,10 @@ int main(int argc, const char* argv[])
 
 	memcpy (gameid, ((const char*)ndsHeader) + 12, 4);
 	headerCRC = crc32((const char*)ndsHeader, sizeof(ndsHeader));
+	
+	CheatCodelist* codelist = new CheatCodelist();
+	ensure (codelist->load(cheatFile, gameid, headerCRC), "Can't read cheat list\n");
+	fclose (cheatFile);
 	CheatFolder *gameCodes = codelist->getGame (gameid, headerCRC);
 	
 	if (!gameCodes) {
