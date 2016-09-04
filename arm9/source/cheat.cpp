@@ -184,10 +184,10 @@ CheatCodelist::~CheatCodelist(void)
 } 
 
 #define BUFFER_SIZE 1024
-bool CheatCodelist::nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenType)
+std::string CheatCodelist::nextToken (FILE* fp, TOKEN_TYPE& tokenType)
 {
 	char tokenData[BUFFER_SIZE];
-	token.clear();
+	std::string token;
 	
 	if (fscanf(fp, " <%1023[^>]", tokenData) > 0) {
 		if (tokenData[0] == '/') {
@@ -211,13 +211,13 @@ bool CheatCodelist::nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenTy
 			token += tokenData;
 		} while (fscanf(fp, "%1023[^<]", tokenData) > 0);
 		if (token.empty()) {
-			return false;
+			return token;
 		}
 	} else {
-		return false;
+		return token;
 	}
 
-	return true;
+	return token;
 }
 	
 bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
@@ -232,15 +232,18 @@ bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
 	TOKEN_TYPE tokenType;
 	int depth = 0;
 	bool done = false;
-		
-	while (nextToken (fp, token, tokenType) && (tokenType != TOKEN_TAG_START || token != "codelist")) ;
+	
+	do	
+	token = nextToken (fp, tokenType);
+	while (!token.empty() && (tokenType != TOKEN_TAG_START || token != "codelist")) ;
 	
 	if (token != "codelist") {
 		return false;
 	}
 	depth ++;
 	
-	while (nextToken (fp, token, tokenType) && !done) {
+	while (!token.empty() && !done) {
+		token = nextToken (fp, tokenType);
 		switch (tokenType) {
 			case TOKEN_DATA:
 				switch (state) {
