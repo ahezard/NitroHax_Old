@@ -308,21 +308,29 @@ bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
 				}				
 				break;
 			case TOKEN_TAG_END:
-				if ((token == "game") || 
-					 (token == "folder") ||
+				if ( (token == "folder") ||
 					 (token == "cheat")
-				) {
-					if( token == "game" && ((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
-						this->addItem (curItem);
-					} else {
-						delete (curItem);
-					}
+				) {					
 					newItem = curItem->getParent();
 					if (newItem) {
 						curItem = newItem;
 					}
 				} else if (token == "subscription") {
 					done = true;
+				} else  if (token == "game") {
+					if(((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
+						this->addItem (curItem);
+						newItem = curItem->getParent();
+						if (newItem) {
+							curItem = newItem;
+						}
+					} else {
+						newItem = curItem->getParent();
+						delete (curItem);
+						if (newItem) {
+							curItem = newItem;
+						}
+					}
 				}
 				state = state_normal;			
 				depth--;
