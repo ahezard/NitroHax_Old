@@ -57,8 +57,10 @@ void runCheatEngine (void* cheats, int cheatLength)
 	// Give the VRAM to the ARM7
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
 	
-	REG_SCFG_CLK = 0x80;
+	// This gets set by bootsplash.cpp now.
+	// REG_SCFG_CLK = 0x80;
 	REG_SCFG_EXT = 0x03000000;
+	// REG_SCFG_EXT = 0x83000000;
 
 	// Reset into a passme loop
 	REG_EXMEMCNT = 0xffff;

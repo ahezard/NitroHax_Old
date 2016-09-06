@@ -53,6 +53,7 @@ static inline void ensure (bool condition, const char* errorMsg) {
 int main(int argc, const char* argv[])
 {
 
+	REG_SCFG_EXT = 0x8307F100; // NAND/SD Access
 	REG_SCFG_CLK = 0x85;
 
 	u32 ndsHeader[0x80];

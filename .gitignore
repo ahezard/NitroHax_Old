@@ -99,3 +99,4 @@ arm9/build/consoletext.o
 arm9/build/consoletext.d
 NitroHax_NTR.cia
 NitroHax_NTR.nds
+arm9/source/version.h

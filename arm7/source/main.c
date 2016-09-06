@@ -64,6 +64,12 @@ int main(void) {
 //---------------------------------------------------------------------------------
 
 	REG_SCFG_CLK = 0x187;
+	// REG_SCFG_EXT |= 0x830F0100; // NAND ACCESS
+	// REG_SCFG_CLK |= 1;
+
+	// The above lines of code is not correct for arm7. That's arm9 SCFG_EXT.
+	// This is the correct setup to enable SD/NAND access on Arm7.
+	REG_SCFG_EXT = 0x93FFFB00; // NAND/SD Access
 
 	irqInit();
 	fifoInit();
@@ -85,9 +91,6 @@ int main(void) {
 	irqSet(IRQ_VBLANK, VblankHandler);
 
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT);   
-
-	REG_SCFG_EXT |= 0x830F0100; // NAND ACCESS
-	REG_SCFG_CLK |= 1;
 
 	fifoWaitValue32(FIFO_USER_01);
 	ResetSlot();

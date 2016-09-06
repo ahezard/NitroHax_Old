@@ -11,7 +11,7 @@ export TARGET		:=	NitroHax
 export TOPDIR		:=	$(CURDIR)
 
 export VERSION_MAJOR	:= 0
-export VERSION_MINOR	:= 96
+export VERSION_MINOR	:= 97
 export VERSTRING	:=	$(VERSION_MAJOR).$(VERSION_MINOR)
 
 #---------------------------------------------------------------------------------
@@ -89,4 +89,5 @@ clean:
 	$(MAKE) -C arm7 clean
 	$(MAKE) -C BootLoader clean
 	rm -f arm9/data/load.bin
+	rm -f arm9/source/version.h
 	rm -f $(TARGET).ds.gba $(TARGET).nds $(TARGET).arm7 $(TARGET).arm9
