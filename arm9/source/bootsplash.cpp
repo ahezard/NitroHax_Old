@@ -120,17 +120,17 @@ void BootJingle() {
 
 	mmInitDefaultMem((mm_addr)soundbank_bin);
 	
-	mmLoadEffect( SFX_BOOM );
+	mmLoadEffect( SFX_DSBOOT );
 
-	mm_sound_effect boom = {
-		{ SFX_BOOM } ,			// id
+	mm_sound_effect dsboot = {
+		{ SFX_DSBOOT } ,			// id
 		(int)(1.0f * (1<<10)),	// rate
 		0,		// handle
 		255,	// volume
 		128,	// panning
 	};
 	
-	mmEffectEx(&boom);
+	mmEffectEx(&dsboot);
 }
 
 void BootJingleDSi() {
