@@ -52,7 +52,8 @@ static inline void ensure (bool condition, const char* errorMsg) {
 //---------------------------------------------------------------------------------
 int main(int argc, const char* argv[])
 {
-
+	dsi_forceTouchDsmode();
+	
 	REG_SCFG_EXT = 0x8307F100; // NAND/SD Access
 	REG_SCFG_CLK = 0x85;
 
