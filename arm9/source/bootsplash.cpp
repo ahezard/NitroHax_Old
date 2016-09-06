@@ -150,7 +150,7 @@ void BootJingleDSi() {
 	mmEffectEx(&dsiboot);
 }
  
-void BootSplashNormal() {
+void BootSplashNormal(bool boostCPU) {
 	
 	// Reset Graphics to 256 colors for boot splash
 	// Setting main ui to 256 colors would break text/sprites, etc
@@ -169,10 +169,6 @@ void BootSplashNormal() {
 		bgMapTop2[i] = (u16)i;
 		bgMapSub2[i] = (u16)i;
 	}
-
-	scanKeys();
-	
-	int pressed = keysDown();
 
 	// offsetting palletes by one frame during the fade in seems to fix black flicker at start.	
 	// only did this for about 5 frames. (time it takes for bottom screen to fade in)
@@ -234,7 +230,7 @@ void BootSplashNormal() {
 
 	// Once frame 8 is reached boot jingle sound effect plays
 	// if (REG_SCFG_ROM == 0x03 or REG_SCFG_ROM == 0x00) { BootJingle(); } else { BootJingleDSi(); }
-	if ( pressed & KEY_L ) { BootJingleDSi(); } else { BootJingle(); }
+	if ( boostCPU ) { BootJingleDSi(); } else { BootJingle(); }
 
 	swiDecompressLZSSVram ((void*)Top06Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	vramcpy2 (&BG_PALETTE[0], Top06Pal, Top06PalLen);
@@ -297,7 +293,7 @@ void BootSplashNormal() {
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	// if (REG_SCFG_ROM == 0x03 or REG_SCFG_ROM == 0x00) {
-	if ( pressed & KEY_L ) { BootSplashDSi(); } else {
+	if ( boostCPU ) { BootSplashDSi(); } else {
 		
 		fifoSendValue32(FIFO_USER_04, 1); 
 		

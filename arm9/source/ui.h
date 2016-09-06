@@ -37,6 +37,7 @@ public:
 		bool isDirectory;
 	};
 	
+	bool TWLBoostCPU;
 	
 	enum TEXT_TYPE {TEXT_TITLE, TEXT_INFO};
 	

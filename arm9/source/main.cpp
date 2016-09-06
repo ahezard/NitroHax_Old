@@ -47,7 +47,7 @@ static inline void ensure (bool condition, const char* errorMsg) {
 	}
 
 	return;
-}	
+}
 
 //---------------------------------------------------------------------------------
 int main(int argc, const char* argv[])
@@ -66,6 +66,8 @@ int main(int argc, const char* argv[])
 	int c;
 	FILE* cheatFile;
 	bool doFilter=false;
+	
+	ui.TWLBoostCPU=false;
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
@@ -171,7 +173,7 @@ int main(int argc, const char* argv[])
 	ui.showMessage ("Running game");
 
 	// Boot Splash will always play.
-	BootSplashNormal();
+	BootSplashNormal(ui.TWLBoostCPU);
 
 	while(1) {
 

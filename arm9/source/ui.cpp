@@ -100,7 +100,6 @@ using namespace std;
 
 const char CHEAT_MENU_FOLDER_UP_NAME[] = " [..]";
 
-
 UserInterface ui;
 
 void vramcpy (void* dest, const void* src, int size) 
@@ -866,6 +865,8 @@ std::string UserInterface::fileBrowser (const char* extension)
 					showFileFolder (contents);
 				}
 			}
+		} else if (pressed == KEY_L) {
+			TWLBoostCPU=true;
 		} else if (pressed == BUTTON_SELECT) {
 			if (contents[menuLevel.selected].isDirectory) {
 				if (contents[menuLevel.selected].filename == "..") {

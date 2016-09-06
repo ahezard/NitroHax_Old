@@ -27,7 +27,7 @@ void BootJingle (void);
 
 void BootJingleDSi (void);
 
-void BootSplashNormal (void);
+void BootSplashNormal (bool boostCPU);
 
 void BootSplashDSi (void);
 
