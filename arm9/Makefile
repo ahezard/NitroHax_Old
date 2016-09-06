@@ -141,6 +141,9 @@ font.s			:	../$(IMAGES)/font.bmp
 
 button_go.s		:	../$(IMAGES)/button_go.bmp
 	grit	$< -gB4 -fts -Mw16 -Mh4 -o $@ -q
+	
+button_go_boost.s		:	../$(IMAGES)/button_go_boost.bmp
+	grit	$< -gB4 -fts -Mw16 -Mh4 -o $@ -q
 
 button_on.s		:	../$(IMAGES)/button_on.bmp
 	grit	$< -gB4 -fts -Mw30 -Mh2 -o $@ -q

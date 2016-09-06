@@ -38,6 +38,7 @@
 #include "button_folder.h"
 #include "button_file.h"
 #include "button_go.h"
+#include "button_go_boost.h"
 
 #define MAX_CHARS_PER_SCREEN 768
 
@@ -89,6 +90,7 @@
 #define BUTTON_SELECT KEY_A
 #define BUTTON_BACK KEY_B
 #define BUTTON_EXIT KEY_START
+#define BUTTON_BOOST KEY_SELECT
 #define BUTTON_ENABLE_ALL KEY_X
 #define BUTTON_DISABLE_ALL KEY_Y
 
@@ -865,7 +867,7 @@ std::string UserInterface::fileBrowser (const char* extension)
 					showFileFolder (contents);
 				}
 			}
-		} else if (pressed == KEY_L) {
+		} else if (pressed == BUTTON_BOOST) {
 			TWLBoostCPU=true;
 		} else if (pressed == BUTTON_SELECT) {
 			if (contents[menuLevel.selected].isDirectory) {
