@@ -220,7 +220,7 @@ std::string CheatCodelist::nextToken (FILE* fp, TOKEN_TYPE& tokenType)
 	return token;
 }
 	
-bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
+bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC, bool filter)
 {
 	enum {state_normal, state_name, state_note, state_codes, state_gameid, state_allowedon} state = state_normal;
 	CheatBase* curItem = this;
@@ -321,7 +321,7 @@ bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC)
 				} else if (token == "subscription") {
 					done = true;
 				} else  if (token == "game") {
-					if(((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
+					if(!filter || ((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
 						this->addItem (curItem);
 						newItem = curItem->getParent();
 						if (newItem) {

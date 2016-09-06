@@ -198,7 +198,7 @@ public:
 	
 	~CheatCodelist ();
 	
-	bool load (FILE* fp, const char gameid[4], uint32_t headerCRC);
+	bool load (FILE* fp, const char gameid[4], uint32_t headerCRC, bool filter);
 
 	CheatGame* getGame (const char gameid[4], uint32_t headerCRC);
 	

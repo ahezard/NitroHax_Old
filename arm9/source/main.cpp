@@ -65,6 +65,7 @@ int main(int argc, const char* argv[])
 	std::string filename;
 	int c;
 	FILE* cheatFile;
+	bool doFilter=false;
 	
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
@@ -94,6 +95,7 @@ int main(int argc, const char* argv[])
 	for (u32 i = 0; i < sizeof(defaultFiles)/sizeof(const char*); i++) {
 		cheatFile = fopen (defaultFiles[i], "rb");
 		if (NULL != cheatFile) break;
+		doFilter=true;
 	}
 	if (NULL == cheatFile) {
 		filename = ui.fileBrowser (".xml");
@@ -123,12 +125,34 @@ int main(int argc, const char* argv[])
 	fseek (cheatFile, 0, SEEK_SET);
 	
 	CheatCodelist* codelist = new CheatCodelist();
-	ensure (codelist->load(cheatFile, gameid, headerCRC), "Can't read cheat list\n");
+	ensure (codelist->load(cheatFile, gameid, headerCRC, doFilter), "Can't read cheat list\n");
 	fclose (cheatFile);
 	CheatFolder *gameCodes = codelist->getGame (gameid, headerCRC);
 	
 	if (!gameCodes) {
 		gameCodes = codelist;
+	}
+	
+	if(codelist->getContents().empty()) {
+		filename = ui.fileBrowser (".xml");
+		ensure (filename.size() > 0, "No file specified");
+		cheatFile = fopen (filename.c_str(), "rb");
+		ensure (cheatFile != NULL, "Couldn't load cheats");
+		
+		ui.showMessage ("Loading codes");
+	
+		c = fgetc(cheatFile);
+		ensure (c != 0xFF && c != 0xFE, "File is in an unsupported unicode encoding");
+		fseek (cheatFile, 0, SEEK_SET);
+		
+		CheatCodelist* codelist = new CheatCodelist();
+		ensure (codelist->load(cheatFile, gameid, headerCRC, doFilter), "Can't read cheat list\n");
+		fclose (cheatFile);
+		gameCodes = codelist->getGame (gameid, headerCRC);
+		
+		if (!gameCodes) {
+			gameCodes = codelist;
+		}
 	}
 	
 	ui.cheatMenu (gameCodes, gameCodes);
