@@ -614,6 +614,8 @@ void UserInterface::cheatMenu (CheatFolder* gameCodes, CheatFolder* top)
 					showCheatFolder (contents);
 				}
 			}
+		} else if (pressed == BUTTON_BOOST) {
+			TWLBoostCPU = true;
 		} else if (pressed == BUTTON_SELECT) {
 			if (menuLevel.selected == CHEAT_MENU_FOLDER_UP) {
 				CheatFolder* cheatFolder = gameCodes->getParent();
