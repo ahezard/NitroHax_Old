@@ -26,10 +26,8 @@
 #include <list>
 
 #include "cheat.h"
-#include "ui.h"
-
 #include "bootsplash.h"
-#include "errorsplash.h"
+#include "ui.h"
 
 #include "nds_card.h"
 #include "cheat_engine.h"
@@ -177,8 +175,7 @@ int main(int argc, const char* argv[])
 
 	while(1) {
 
-	if(REG_SCFG_MC == 0x11) { 
-		ErrorNoCard();
+	if(REG_SCFG_MC == 0x11) {
 		break;
 	} else {
 		runCheatEngine (cheatDest, curCheat * sizeof(u32));	

@@ -868,7 +868,7 @@ std::string UserInterface::fileBrowser (const char* extension)
 				}
 			}
 		} else if (pressed == BUTTON_BOOST) {
-			TWLBoostCPU=true;
+			TWLBoostCPU = true;
 		} else if (pressed == BUTTON_SELECT) {
 			if (contents[menuLevel.selected].isDirectory) {
 				if (contents[menuLevel.selected].filename == "..") {
