@@ -52,7 +52,7 @@ int main(int argc, const char* argv[])
 {
 	dsi_forceTouchDsmode();
 	
-	REG_SCFG_EXT = 0x8307F100; // NAND/SD Access
+	// REG_SCFG_EXT = 0x8307F100; // NAND/SD Access
 	REG_SCFG_CLK = 0x85;
 
 	u32 ndsHeader[0x80];
@@ -67,6 +67,10 @@ int main(int argc, const char* argv[])
 	
 	ui.TWLBoostCPU=false;
 	
+	// If slot is powered off, tell Arm7 slot power on is required.
+	if(REG_SCFG_MC == 0x11) { fifoSendValue32(FIFO_USER_02, 1); }
+	if(REG_SCFG_MC == 0x10) { fifoSendValue32(FIFO_USER_02, 1); }
+
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
 #ifdef DEMO
@@ -80,14 +84,10 @@ int main(int argc, const char* argv[])
 		for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
 	}
 	
+	// Tell Arm7 it's ready for card reset (if card reset is nessecery)
 	fifoSendValue32(FIFO_USER_01, 1);
-	
-	for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
-	
-	fifoWaitValue32(FIFO_USER_02);	
-
-	for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
-
+	// Waits for Arm7 to finish card reset (if nessecery)
+	fifoWaitValue32(FIFO_USER_03);
 	
 	ensure (fatInitDefault(), "SD init failed");
 
